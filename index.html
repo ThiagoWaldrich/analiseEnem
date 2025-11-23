@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário de Produtividade 2025-2026</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/neutralino.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Calendário 2025-2026</h1>
+            <div class="header-controls">
+                <select id="month-selector">
+                    <option value="0">Janeiro</option>
+                    <option value="1">Fevereiro</option>
+                    <option value="2">Março</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Maio</option>
+                    <option value="5">Junho</option>
+                    <option value="6">Julho</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Setembro</option>
+                    <option value="9">Outubro</option>
+                    <option value="10">Novembro</option>
+                    <option value="11">Dezembro</option>
+                </select>
+                <select id="year-selector">
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                </select>
+                <p id="today-btn"></p>
+                <button id="manage-subjects-btn">Gerenciar Matérias</button>
+                <button onclick="window.location.href='autodiagnostico.html'" id="auto-manage-btn">Ir para Autodiagnóstico</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <div class="day-name">Dom</div>
+                    <div class="day-name">Seg</div>
+                    <div class="day-name">Ter</div>
+                    <div class="day-name">Qua</div>
+                    <div class="day-name">Qui</div>
+                    <div class="day-name">Sex</div>
+                    <div class="day-name">Sáb</div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                </div>
+            </div>
+
+            <div class="day-panel" id="day-panel">
+                <div class="day-panel-header">
+                    <h2 id="selected-date">Selecione um dia</h2>
+                    <button id="close-panel">✕</button>
+                </div>
+                
+                <div class="day-info">
+                    <div class="mood-energy">
+                        <div class="mood-section">
+                            <label>Humor:</label>
+                            <div class="rating">
+                                <span class="rating-option" data-value="1">😞</span>
+                                <span class="rating-option" data-value="2">😐</span>
+                                <span class="rating-option" data-value="3">😊</span>
+                                <span class="rating-option" data-value="4">😄</span>
+                                <span class="rating-option" data-value="5">🤩</span>
+                            </div>
+                        </div>
+                        <div class="energy-section">
+                            <label>Energia:</label>
+                            <div class="rating">
+                                <span class="rating-option" data-value="1">🔋</span>
+                                <span class="rating-option" data-value="2">🔋🔋</span>
+                                <span class="rating-option" data-value="3">🔋🔋🔋</span>
+                                <span class="rating-option" data-value="4">🔋🔋🔋🔋</span>
+                                <span class="rating-option" data-value="5">🔋🔋🔋🔋🔋</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-section">
+                        <label for="day-notes">Anotações do dia:</label>
+                        <textarea id="day-notes" placeholder="Adicione suas anotações aqui..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="study-section">
+                    <div class="study-header">
+                        <h3>Rotina de Estudos do Dia</h3>
+                        <div class="study-summary" id="study-summary">
+                        </div>
+                    </div>
+                    <div class="study-routine" id="study-routine">  
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="modal-overlay" id="modal-overlay">
+            <div class="modal" id="modal">
+                <div class="modal-header">
+                    <h3 id="modal-title">Gerenciar Matérias</h3>
+                    <button id="close-modal">✕</button>
+                </div>
+                <div class="modal-content" id="modal-content">
+                </div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn" id="goals-btn"></button>
+            <button class="nav-btn" id="review-btn"></button>
+        </nav>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
