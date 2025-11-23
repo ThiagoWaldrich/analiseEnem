@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analisador ENEM</title>
-    <script src="https://neutralino.js.org/js/neutralino.js"></script>
+    <script src="js/neutralino.js"></script>
     <style>
         /* SEUS ESTILOS ORIGINAIS - MANTIDOS */
         :root {
@@ -496,77 +496,104 @@
             "#FFB3E6", "#FFFF99", "#FF6666", "#66FFCC", "#FF99CC", "#66FF66"
         ];
 
-        // SISTEMA DE PERSISTÊNCIA DIRETO - IGUAL AO CALENDÁRIO
-        class ENEMStorage {
-            constructor() {
-                this.storageKey = 'enem_questions';
-                this.storagePath = '.storage/enem_questions.json';
-                this.isNeutralino = false;
-            }
-
-            async init() {
-                try {
-                    if (typeof Neutralino !== 'undefined') {
-                        await Neutralino.init();
-                        this.isNeutralino = true;
-                        console.log('💾 Modo Neutralino Filesystem');
-                    } else {
-                        console.log('💾 Modo LocalStorage (Navegador)');
-                    }
-                    return true;
-                } catch (error) {
-                    console.error('❌ Erro na inicialização:', error);
-                    this.isNeutralino = false;
-                    return false;
+        // ========== SISTEMA DE ARMAZENAMENTO PERSISTENTE COM FILESYSTEM ==========
+        // IDÊNTICO AO main.js - SEM LOCALSTORAGE
+        
+        let isNeutralino = false;
+        const DB_FILE = 'enem_database.json';
+        
+        // Verificar se o Neutralino está disponível
+        async function checkNeutralino() {
+            try {
+                if (typeof Neutralino !== 'undefined') {
+                    await Neutralino.init();
+                    isNeutralino = true;
+                    console.log('✅ Analisador ENEM usando Neutralino Filesystem');
                 }
+            } catch (error) {
+                console.error('❌ Neutralino não disponível:', error);
             }
-
-            async saveData(data) {
-                try {
-                    if (this.isNeutralino) {
-                        // SALVAR EM ARQUIVO - método direto e simples
-                        await Neutralino.filesystem.writeFile(this.storagePath, JSON.stringify(data));
-                        console.log('💾 Dados salvos em:', this.storagePath);
-                        return true;
-                    } else {
-                        localStorage.setItem(this.storageKey, JSON.stringify(data));
-                        return true;
-                    }
-                } catch (error) {
-                    console.error('❌ Erro ao salvar:', error);
-                    // Fallback para localStorage
-                    try {
-                        localStorage.setItem(this.storageKey, JSON.stringify(data));
-                        return true;
-                    } catch (e) {
-                        return false;
-                    }
-                }
+        }
+        
+        // Inicializar banco de dados
+        async function initDatabase() {
+            if (!isNeutralino) return;
+            
+            try {
+                // Verificar se o arquivo existe
+                await Neutralino.filesystem.readFile(`./storage/${DB_FILE}`);
+                console.log('💾 Banco de dados encontrado');
+            } catch (error) {
+                // Se não existe, criar um novo
+                console.log('📝 Criando novo banco de dados...');
+                await saveDatabase({});
             }
-
-            async loadData() {
-                try {
-                    if (this.isNeutralino) {
-                        try {
-                            // TENTAR LER DO ARQUIVO
-                            const fileContent = await Neutralino.filesystem.readFile(this.storagePath);
-                            const data = JSON.parse(fileContent);
-                            console.log('📥 Dados carregados do arquivo');
-                            return data;
-                        } catch (fileError) {
-                            console.log('📄 Arquivo não existe, criando vazio...');
-                            // Se o arquivo não existe, criar um array vazio
-                            await this.saveData([]);
-                            return [];
-                        }
-                    } else {
-                        const localData = localStorage.getItem(this.storageKey);
-                        return localData ? JSON.parse(localData) : [];
-                    }
-                } catch (error) {
-                    console.error('❌ Erro ao carregar:', error);
-                    return [];
+        }
+        
+        // Carregar todo o banco de dados
+        async function loadDatabase() {
+            try {
+                if (isNeutralino) {
+                    const content = await Neutralino.filesystem.readFile(`./storage/${DB_FILE}`);
+                    return JSON.parse(content);
+                } else {
+                    return {};
                 }
+            } catch (error) {
+                console.warn('⚠️ Erro ao carregar banco de dados, usando novo:', error);
+                return {};
+            }
+        }
+        
+        // Salvar todo o banco de dados
+        async function saveDatabase(database) {
+            if (!isNeutralino) {
+                console.warn('⚠️ Neutralino não está disponível - dados não serão salvos');
+                return false;
+            }
+            
+            try {
+                // Criar diretório storage se não existir
+                try {
+                    await Neutralino.filesystem.createDirectory('./storage');
+                } catch (e) {
+                    // Diretório já existe, ignorar erro
+                }
+                
+                await Neutralino.filesystem.writeFile(
+                    `./storage/${DB_FILE}`,
+                    JSON.stringify(database, null, 2)
+                );
+                console.log('💾 Banco de dados salvo com sucesso');
+                return true;
+            } catch (error) {
+                console.error('❌ Erro ao salvar banco de dados:', error);
+                return false;
+            }
+        }
+        
+        // Salvar dados específicos no banco
+        async function saveToStorage(key, data) {
+            try {
+                const database = await loadDatabase();
+                database[key] = data;
+                await saveDatabase(database);
+                console.log(`✅ Dados salvos: ${key}`);
+                return true;
+            } catch (error) {
+                console.error('❌ Erro ao salvar dados:', error);
+                return false;
+            }
+        }
+        
+        // Obter dados específicos do banco
+        async function getFromStorage(key) {
+            try {
+                const database = await loadDatabase();
+                return database[key] || null;
+            } catch (error) {
+                console.error('❌ Erro ao carregar dados:', error);
+                return null;
             }
         }
 
@@ -579,7 +606,6 @@
                     "Artes", "Literatura", "Português"
                 ];
                 this.charts = {};
-                this.storage = new ENEMStorage();
                 
                 this.init();
             }
@@ -587,8 +613,9 @@
             async init() {
                 console.log('🚀 INICIANDO ANALISADOR ENEM');
                 
-                // Inicializar storage
-                await this.storage.init();
+                // Verificar Neutralino e inicializar storage
+                await checkNeutralino();
+                await initDatabase();
                 
                 // Carregar dados
                 await this.loadData();
@@ -602,7 +629,8 @@
 
             async loadData() {
                 try {
-                    this.questions = await this.storage.loadData();
+                    const data = await getFromStorage('questions');
+                    this.questions = data || [];
                     console.log(`✅ ${this.questions.length} questões carregadas`);
                 } catch (error) {
                     console.error('❌ Erro ao carregar dados:', error);
@@ -613,7 +641,7 @@
 
             async saveData() {
                 try {
-                    const success = await this.storage.saveData(this.questions);
+                    const success = await saveToStorage('questions', this.questions);
                     if (success) {
                         console.log('💾 Dados salvos com sucesso');
                         return true;
